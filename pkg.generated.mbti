@@ -38,6 +38,8 @@ pub(all) enum Operation {
   Remove
   Rename
   Link
+  Copy
+  AtomicWrite
 } derive(Eq, @debug.Debug)
 pub fn Operation::name(Self) -> String
 

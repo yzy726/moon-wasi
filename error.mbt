@@ -18,6 +18,8 @@ pub(all) enum Operation {
   Remove
   Rename
   Link
+  Copy
+  AtomicWrite
 } derive(Eq, Debug)
 
 ///|
@@ -41,6 +43,8 @@ pub fn Operation::name(self : Operation) -> String {
     Remove => "remove"
     Rename => "rename"
     Link => "link"
+    Copy => "copy"
+    AtomicWrite => "atomic-write"
   }
 }
 

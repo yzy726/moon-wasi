@@ -1,0 +1,138 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Ag108/moon-wasi/fs"
+
+import {
+  "Ag108/moon-wasi",
+  "Ag108/moon-wasi/path",
+  "moonbitlang/core/debug",
+  "peter-jerry-ye/wasi",
+}
+
+// Values
+pub fn append_bytes(@path.GuestPath, BytesView, sync? : SyncMode) -> Unit raise @moon-wasi.WasiError
+
+pub fn atomic_write(@path.GuestPath, BytesView, replace? : Bool) -> Unit raise @moon-wasi.WasiError
+
+pub fn atomic_write_text(@path.GuestPath, StringView, replace? : Bool) -> Unit raise @moon-wasi.WasiError
+
+pub fn copy_file(@path.GuestPath, @path.GuestPath, overwrite? : Bool, sync? : SyncMode) -> UInt64 raise @moon-wasi.WasiError
+
+pub fn copy_tree(@path.GuestPath, @path.GuestPath, overwrite? : Bool) -> Unit raise @moon-wasi.WasiError
+
+pub fn create_dir(@path.GuestPath) -> Unit raise @moon-wasi.WasiError
+
+pub fn create_dir_all(@path.GuestPath) -> Unit raise @moon-wasi.WasiError
+
+pub fn exists(@path.GuestPath) -> Bool
+
+pub fn hard_link(@path.GuestPath, @path.GuestPath) -> Unit raise @moon-wasi.WasiError
+
+pub fn metadata(@path.GuestPath, follow_symlink? : Bool) -> Metadata raise @moon-wasi.WasiError
+
+pub fn open(@path.GuestPath, OpenOptions) -> File raise @moon-wasi.WasiError
+
+pub fn read_bytes(@path.GuestPath) -> Bytes raise @moon-wasi.WasiError
+
+pub fn read_dir(@path.GuestPath) -> Array[DirEntry] raise @moon-wasi.WasiError
+
+pub fn read_link(@path.GuestPath) -> String raise @moon-wasi.WasiError
+
+pub fn read_text(@path.GuestPath) -> String raise @moon-wasi.WasiError
+
+pub fn remove_dir(@path.GuestPath) -> Unit raise @moon-wasi.WasiError
+
+pub fn remove_file(@path.GuestPath) -> Unit raise @moon-wasi.WasiError
+
+pub fn remove_tree(@path.GuestPath) -> Unit raise @moon-wasi.WasiError
+
+pub fn rename(@path.GuestPath, @path.GuestPath) -> Unit raise @moon-wasi.WasiError
+
+pub fn symbolic_link(@path.GuestPath, @path.GuestPath) -> Unit raise @moon-wasi.WasiError
+
+pub fn walk(@path.GuestPath, max_depth? : Int) -> Array[WalkEntry] raise @moon-wasi.WasiError
+
+pub fn write_bytes(@path.GuestPath, BytesView, sync? : SyncMode) -> Unit raise @moon-wasi.WasiError
+
+pub fn write_text(@path.GuestPath, StringView, sync? : SyncMode) -> Unit raise @moon-wasi.WasiError
+
+// Errors
+
+// Types and methods
+pub(all) struct DirEntry {
+  name : String
+  path : @path.GuestPath
+  kind : FileKind
+} derive(Eq, @debug.Debug)
+
+pub struct File {
+  fd : @wasi.Fd
+  path : String
+}
+pub fn File::close(Self) -> Unit raise @moon-wasi.WasiError
+pub fn File::metadata(Self) -> Metadata raise @moon-wasi.WasiError
+pub fn File::read_all(Self) -> Bytes raise @moon-wasi.WasiError
+pub fn File::seek(Self, Int64, SeekFrom) -> UInt64 raise @moon-wasi.WasiError
+pub fn File::sync(Self, data_only? : Bool) -> Unit raise @moon-wasi.WasiError
+pub fn File::tell(Self) -> UInt64 raise @moon-wasi.WasiError
+pub fn File::write_all(Self, BytesView) -> Unit raise @moon-wasi.WasiError
+
+pub(all) enum FileKind {
+  Unknown
+  Regular
+  Directory
+  SymbolicLink
+  Socket
+  Pipe
+  BlockDevice
+  CharacterDevice
+} derive(Eq, @debug.Debug)
+
+pub(all) struct Metadata {
+  kind : FileKind
+  size : UInt64
+  accessed_ns : UInt64
+  modified_ns : UInt64
+  changed_ns : UInt64
+  links : UInt64
+} derive(Eq, @debug.Debug)
+
+pub struct OpenOptions {
+  read : Bool
+  write : Bool
+  append : Bool
+  create : Bool
+  create_new : Bool
+  truncate : Bool
+  sync : SyncMode
+} derive(Eq, @debug.Debug)
+pub fn OpenOptions::append(Self, enabled? : Bool) -> Self
+pub fn OpenOptions::create(Self, enabled? : Bool) -> Self
+pub fn OpenOptions::create_new(Self, enabled? : Bool) -> Self
+pub fn OpenOptions::read_only() -> Self
+pub fn OpenOptions::read_write() -> Self
+pub fn OpenOptions::sync(Self, SyncMode) -> Self
+pub fn OpenOptions::truncate(Self, enabled? : Bool) -> Self
+pub fn OpenOptions::write_only() -> Self
+
+pub(all) enum SeekFrom {
+  Start
+  Current
+  End
+} derive(Eq, @debug.Debug)
+
+pub(all) enum SyncMode {
+  None
+  Data
+  Full
+} derive(Eq, @debug.Debug)
+
+pub(all) struct WalkEntry {
+  path : @path.GuestPath
+  kind : FileKind
+  depth : Int
+} derive(Eq, @debug.Debug)
+
+// Type aliases
+
+// Traits
+

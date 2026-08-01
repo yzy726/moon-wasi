@@ -1,4 +1,6 @@
 import {
+  "Ag108/moon-wasi/fs" @wasi_fs,
+  "Ag108/moon-wasi/path",
   "Ag108/moon-wasi/sys" @wasi_sys,
   "moonbitlang/core/debug",
 }

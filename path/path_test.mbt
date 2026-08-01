@@ -70,3 +70,29 @@ test "rejects empty and nul-containing paths" {
     _ => fail("expected validation to fail")
   }
 }
+
+///|
+test "normalization table" {
+  let cases = [
+    (".", "."),
+    ("./a", "a"),
+    ("a/", "a"),
+    ("a//b", "a/b"),
+    ("a/./b", "a/b"),
+    ("a/b/..", "a"),
+    ("a/b/../c", "a/c"),
+  ]
+  for item in cases {
+    let (raw, expected) = item
+    assert_eq(@path.GuestPath::new(raw).as_string(), expected)
+  }
+}
+
+///|
+test "containment respects component boundaries" {
+  let base = @path.GuestPath::new("work/cache")
+  assert_true(@path.GuestPath::new("work/cache").is_within(base))
+  assert_true(@path.GuestPath::new("work/cache/item").is_within(base))
+  assert_true(!@path.GuestPath::new("work/cache-old").is_within(base))
+  assert_true(!@path.GuestPath::new("work").is_within(base))
+}

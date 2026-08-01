@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -euxo pipefail
 
 MOON_WASI_WASMTIME="${MOON_WASI_WASMTIME:-wasmtime}"
 
+moon install
 moon info
 moon fmt
 moon check --deny-warn

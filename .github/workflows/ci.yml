@@ -34,8 +34,34 @@ jobs:
           moon version --all
           wasmtime --version
 
-      - name: Run full WASI validation
-        run: bash scripts/test-wasi.sh
+      - name: Update interfaces and formatting
+        run: |
+          moon info
+          moon fmt
+
+      - name: Run strict checks
+        run: moon check --deny-warn
+
+      - name: Run unit tests
+        run: moon test --target wasm
+
+      - name: Build release artifacts
+        run: |
+          moon build --target wasm --release integration/fs
+          moon build --target wasm --release integration/sys
+          moon build --target wasm --release cmd/main
+          moon build --target wasm --release examples/tree
+          moon build --target wasm --release examples/atomic-config
+
+      - name: Run filesystem integration
+        run: >-
+          wasmtime run --dir .::.
+          _build/wasm/release/build/integration/fs/fs.wasm
+
+      - name: Run system integration
+        run: >-
+          wasmtime run --dir .::. --env MOON_WASI_TEST=ready
+          _build/wasm/release/build/integration/sys/sys.wasm
 
       - name: Verify generated files and formatting are committed
         run: git diff --exit-code

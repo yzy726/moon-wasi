@@ -218,7 +218,7 @@ MOON_WASI_WASMTIME=/path/to/wasmtime bash scripts/test-wasi.sh
 ├── examples/tree/            # 确定性目录树示例
 ├── examples/atomic-config/   # 原子配置写入示例
 ├── docs/                     # 架构与兼容性说明
-├── scripts/test-wasi.sh      # 本地与 CI 共用的验收入口
+├── scripts/test-wasi.sh      # 本地完整验收入口
 ├── moon.mod                  # 模块元数据和依赖
 └── README.mbt.md
 ```
@@ -241,7 +241,8 @@ bash scripts/test-wasi.sh
 ```
 
 脚本会运行接口生成、格式化、严格检查、单元测试、全部 release 构建，以及
-`integration/fs` 和 `integration/sys` 两个真实 Wasmtime 集成程序。
+`integration/fs` 和 `integration/sys` 两个真实 Wasmtime 集成程序。CI 使用相同命令，
+但拆分为独立步骤，以便直接定位失败环节。
 
 也可以分开运行：
 

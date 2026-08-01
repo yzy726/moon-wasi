@@ -34,11 +34,6 @@ jobs:
           moon version --all
           wasmtime --version
 
-      - name: Update interfaces and formatting
-        run: |
-          moon info
-          moon fmt
-
       - name: Run strict checks
         run: moon check --deny-warn
 
@@ -63,8 +58,11 @@ jobs:
           wasmtime run --dir .::. --env MOON_WASI_TEST=ready
           _build/wasm/release/build/integration/sys/sys.wasm
 
-      - name: Verify generated files and formatting are committed
-        run: git diff --exit-code
+      - name: Verify generated interfaces and formatting
+        run: |
+          moon info
+          moon fmt --check
+          git diff --exit-code
 
       - name: Validate release package
         run: moon package --frozen --list

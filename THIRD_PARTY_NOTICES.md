@@ -6,5 +6,4 @@
 | --- | --- | --- | --- |
 | [`peter-jerry-ye/wasi`](https://github.com/moonbit-community/wasip1) | 0.25.0 | WASI Preview 1 ABI 绑定 | Apache-2.0 |
 
-第三方组件仍受各自许可证约束。本项目自身采用 Apache License 2.0，完整文本见
-`LICENSE`。
+第三方组件仍受各自许可证约束。本项目自身采用 Apache License 2.0，完整文本见`LICENSE`。

@@ -1,17 +1,13 @@
 # MoonBit WASI 增强库
 
-一个面向 MoonBit 命令行程序的 capability-aware WASI Preview 1 增强库，提供安全路径、
-可靠文件系统操作、原子写入和常用系统能力。
+一个面向 MoonBit 命令行程序的 capability-aware WASI Preview 1 增强库，提供安全路径、可靠文件系统操作、原子写入和常用系统能力。
 
-`Ag108/moon-wasi` 建立在 `peter-jerry-ye/wasi` 的底层 ABI 绑定之上，目标后端为
-MoonBit `wasm`，当前版本为 `0.1.0`。本项目是原创增强库，不是其他语言项目的移植。
+`Ag108/moon-wasi` 建立在 `peter-jerry-ye/wasi` 的底层 ABI 绑定之上，目标后端为MoonBit `wasm`，当前版本为 `0.1.0`。本项目是原创增强库，不是其他语言项目的移植。
 
 ## 特性
 
-- 🛡️ **安全路径**：`GuestPath` 规范化 guest 相对路径，拒绝绝对路径、NUL、反斜杠和
-  越过 capability 根的父级跳转
-- 📁 **增强文件系统**：支持完整读写、追加、seek/tell、metadata、目录遍历、复制、
-  rename、硬链接和符号链接
+- 🛡️ **安全路径**：`GuestPath` 规范化 guest 相对路径，拒绝绝对路径、NUL、反斜杠和越过 capability 根的父级跳转
+- 📁 **增强文件系统**：支持完整读写、追加、seek/tell、metadata、目录遍历、复制、rename、硬链接和符号链接
 - ⚛️ **原子写入**：使用同目录 exclusive 临时文件、完整同步和 rename，失败时自动清理
 - 🔒 **Capability 模型**：只访问 WASI 运行时显式预开放的目录，不接触或推导宿主路径
 - 🧭 **确定性遍历**：分页读取大目录，并以稳定词法顺序返回目录项和深度优先遍历结果
@@ -48,8 +44,7 @@ target/moon-wasi-example
 确保已经安装：
 
 - [MoonBit](https://www.moonbitlang.com/) 工具链
-- 支持 `wasi_snapshot_preview1` 的运行时，示例使用
-  [Wasmtime](https://wasmtime.dev/)
+- 支持 `wasi_snapshot_preview1` 的运行时，示例使用[Wasmtime](https://wasmtime.dev/)
 
 从源码开发本仓库：
 
@@ -169,14 +164,11 @@ fn main {
 
 ### 错误和资源所有权
 
-宿主错误使用 `WasiFailure(operation, path, errno)`，调用前校验错误使用
-`InvalidInput(operation, reason)`。`message()` 可生成适合命令行日志的说明。
+宿主错误使用 `WasiFailure(operation, path, errno)`，调用前校验错误使用`InvalidInput(operation, reason)`。`message()` 可生成适合命令行日志的说明。
 
-`fs.open` 返回拥有 descriptor 的 `File`，调用者必须恰好调用一次 `close()`。
-`read_text`、`write_text`、`copy_file` 等高层 API 会自动关闭它们创建的 descriptor。
+`fs.open` 返回拥有 descriptor 的 `File`，调用者必须恰好调用一次 `close()`。`read_text`、`write_text`、`copy_file` 等高层 API 会自动关闭它们创建的 descriptor。
 
-`exists` 是将所有不可访问状态折叠为 `false` 的便利接口；需要区分“不存在”和宿主
-错误时应使用 `try_exists`。
+`exists` 是将所有不可访问状态折叠为 `false` 的便利接口；需要区分“不存在”和宿主错误时应使用 `try_exists`。
 
 ## 配置
 
@@ -192,8 +184,7 @@ wasmtime run --dir .::. app.wasm
 wasmtime run --dir .::. --env APP_MODE=production app.wasm
 ```
 
-建议只预开放应用需要的最小目录。`GuestPath` 只表示相对 guest 路径，因此 0.1 版本建议
-将主要 preopen 映射为 `.`。
+建议只预开放应用需要的最小目录。`GuestPath` 只表示相对 guest 路径，因此 0.1 版本建议将主要 preopen 映射为 `.`。
 
 ### 测试运行时
 
@@ -220,7 +211,7 @@ MOON_WASI_WASMTIME=/path/to/wasmtime bash scripts/test-wasi.sh
 ├── docs/                     # 架构与兼容性说明
 ├── scripts/test-wasi.sh      # 本地完整验收入口
 ├── moon.mod                  # 模块元数据和依赖
-└── README.mbt.md
+└── README.md
 ```
 
 ### 代码特点
@@ -240,9 +231,7 @@ MOON_WASI_WASMTIME=/path/to/wasmtime bash scripts/test-wasi.sh
 bash scripts/test-wasi.sh
 ```
 
-脚本会运行接口生成、格式化、严格检查、单元测试、全部 release 构建，以及
-`integration/fs` 和 `integration/sys` 两个真实 Wasmtime 集成程序。CI 使用相同命令，
-但拆分为独立步骤，以便直接定位失败环节。
+脚本会运行接口生成、格式化、严格检查、单元测试、全部 release 构建，以及`integration/fs` 和 `integration/sys` 两个真实 Wasmtime 集成程序。CI 使用相同命令，但拆分为独立步骤，以便直接定位失败环节。
 
 也可以分开运行：
 
@@ -254,8 +243,7 @@ moon test --target wasm
 moon package --frozen --list
 ```
 
-MoonBit wasm 单元测试宿主没有实例化全部路径类 WASI import，因此纯逻辑由
-`moon test` 验证，真实文件系统调用由独立 wasm 集成程序验证。
+MoonBit wasm 单元测试宿主没有实例化全部路径类 WASI import，因此纯逻辑由`moon test` 验证，真实文件系统调用由独立 wasm 集成程序验证。
 
 ## 兼容性
 
@@ -292,5 +280,4 @@ Apache-2.0 License，完整文本见 [LICENSE](LICENSE)。
 
 ## 贡献
 
-欢迎提交 Issue 和 Pull Request。提交前请运行 `bash scripts/test-wasi.sh`，并阅读
-[贡献指南](CONTRIBUTING.md)。
+欢迎提交 Issue 和 Pull Request。提交前请运行 `bash scripts/test-wasi.sh`，并阅读[贡献指南](CONTRIBUTING.md)。

@@ -13,7 +13,7 @@ name = "Ag108/moon-wasi"
 
 version = "0.1.0"
 
-readme = "README.mbt.md"
+readme = "README.md"
 
 repository = "https://github.com/yzy726/moon-wasi"
 

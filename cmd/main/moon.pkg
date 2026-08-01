@@ -1,0 +1,5 @@
+// import {
+//   "Ag108/moon-wasi" @lib,
+// }
+
+pkgtype(kind: "executable")

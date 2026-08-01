@@ -1,0 +1,7 @@
+import {
+  "Ag108/moon-wasi" @root,
+  "moonbitlang/core/encoding/utf8",
+  "peter-jerry-ye/wasi",
+}
+
+supported_targets = "wasm"

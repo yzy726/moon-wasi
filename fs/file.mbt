@@ -88,6 +88,12 @@ pub fn File::close(self : File) -> Unit raise @root.WasiError {
 }
 
 ///|
+/// Return the WASI descriptor number for polling and host integration.
+pub fn File::raw_fd(self : File) -> Int {
+  self.fd.0
+}
+
+///|
 fn File::close_silently(self : File) -> Unit {
   self.fd.fd_close() catch {
     _ => ()

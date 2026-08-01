@@ -70,6 +70,7 @@ pub struct File {
 }
 pub fn File::close(Self) -> Unit raise @moon-wasi.WasiError
 pub fn File::metadata(Self) -> Metadata raise @moon-wasi.WasiError
+pub fn File::raw_fd(Self) -> Int
 pub fn File::read_all(Self) -> Bytes raise @moon-wasi.WasiError
 pub fn File::seek(Self, Int64, SeekFrom) -> UInt64 raise @moon-wasi.WasiError
 pub fn File::sync(Self, data_only? : Bool) -> Unit raise @moon-wasi.WasiError

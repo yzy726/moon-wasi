@@ -1,0 +1,9 @@
+import {
+  "Ag108/moon-wasi" @root,
+  "Ag108/moon-wasi/sys" @wasi_sys,
+  "moonbitlang/core/debug",
+}
+
+pkgtype(kind: "executable")
+
+supported_targets = "wasm"

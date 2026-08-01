@@ -1,0 +1,81 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Ag108/moon-wasi/sys"
+
+import {
+  "Ag108/moon-wasi",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn arguments() -> Array[String] raise @moon-wasi.WasiError
+
+pub fn clock_resolution(Clock) -> UInt64 raise @moon-wasi.WasiError
+
+pub fn clock_time(Clock, precision_ns? : UInt64) -> UInt64 raise @moon-wasi.WasiError
+
+pub fn environment() -> Array[EnvVar] raise @moon-wasi.WasiError
+
+pub fn environment_variable(StringView) -> String? raise @moon-wasi.WasiError
+
+pub fn eprint(StringView) -> Unit raise @moon-wasi.WasiError
+
+pub fn[A] exit(UInt) -> A
+
+pub fn fill_random(FixedArray[Byte]) -> Unit raise @moon-wasi.WasiError
+
+pub fn preopens() -> Array[Preopen] raise @moon-wasi.WasiError
+
+pub fn print(StringView) -> Unit raise @moon-wasi.WasiError
+
+pub fn random_below(UInt64) -> UInt64 raise @moon-wasi.WasiError
+
+pub fn random_bytes(Int) -> Bytes raise @moon-wasi.WasiError
+
+pub fn random_u64() -> UInt64 raise @moon-wasi.WasiError
+
+pub fn read_stdin() -> Bytes raise @moon-wasi.WasiError
+
+pub fn read_stdin_text() -> String raise @moon-wasi.WasiError
+
+pub fn sleep(UInt64) -> Unit raise @moon-wasi.WasiError
+
+pub fn wait_descriptor(Int, Interest, timeout_ns? : UInt64) -> PollResult raise @moon-wasi.WasiError
+
+pub fn write_stderr(BytesView) -> Unit raise @moon-wasi.WasiError
+
+pub fn write_stdout(BytesView) -> Unit raise @moon-wasi.WasiError
+
+// Errors
+
+// Types and methods
+pub(all) enum Clock {
+  Realtime
+  Monotonic
+  ProcessCpu
+  ThreadCpu
+} derive(Eq, @debug.Debug)
+
+pub(all) struct EnvVar {
+  name : String
+  value : String
+} derive(Eq, @debug.Debug)
+
+pub(all) enum Interest {
+  Readable
+  Writable
+} derive(Eq, @debug.Debug)
+
+pub(all) enum PollResult {
+  Ready(UInt64, Bool)
+  TimedOut
+} derive(Eq, @debug.Debug)
+
+pub(all) struct Preopen {
+  guest_path : String
+  fd : Int
+} derive(Eq, @debug.Debug)
+
+// Type aliases
+
+// Traits
+

@@ -15,12 +15,16 @@ version = "0.1.0"
 
 readme = "README.mbt.md"
 
-repository = ""
+repository = "https://github.com/Ag108/moon-wasi"
 
 license = "Apache-2.0"
 
-keywords = []
+keywords = [ "wasi", "wasm", "filesystem", "capability", "cli" ]
 
 preferred_target = "wasm"
 
-description = ""
+description = "Capability-aware WASI Preview 1 utilities for MoonBit"
+
+import {
+  "peter-jerry-ye/wasi@0.25.0",
+}

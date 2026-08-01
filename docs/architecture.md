@@ -53,9 +53,10 @@ WASI。最终权限仍由运行时的 preopen 与 rights 决定。
 ## 原子写入
 
 `atomic_write` 在目标文件的同一目录生成随机临时名，以 `create_new` 防止碰撞，写完后
-执行完整 `fd_sync`，最后通过 `path_rename` 替换目标。任何失败都会尽力删除临时文件。
-同目录策略避免跨文件系统 rename；Preview 1 无可移植父目录 fsync，因此最终掉电语义
-仍由宿主文件系统决定。
+执行完整 `fd_sync`。默认通过 `path_rename` 替换目标；`replace=false` 则用硬链接原子
+发布一个尚不存在的目标，再移除临时名字。任何失败都会尽力删除临时文件。同目录策略
+避免跨文件系统 rename；Preview 1 无可移植父目录 fsync，因此最终掉电语义仍由宿主
+文件系统决定。
 
 ## 错误模型
 

@@ -6,7 +6,8 @@ fn random_suffix() -> String raise @root.WasiError {
   }
   let parts : Array[String] = []
   for byte in bytes {
-    parts.push(byte.to_int().to_string(radix=16))
+    let encoded = byte.to_int().to_string(radix=16)
+    parts.push(if encoded.length() == 1 { "0\{encoded}" } else { encoded })
   }
   parts.join("")
 }
@@ -16,8 +17,7 @@ fn temporary_sibling(
   path : @path.GuestPath,
 ) -> @path.GuestPath raise @root.WasiError {
   let parent = path.parent().unwrap_or(path)
-  let name = path.file_name().unwrap_or("root")
-  parent.join(".\{name}.moon-wasi-\{random_suffix()}.tmp") catch {
+  parent.join(".moon-wasi-\{random_suffix()}.tmp") catch {
     _ =>
       raise @root.InvalidInput(
         @root.Operation::AtomicWrite,
@@ -27,27 +27,64 @@ fn temporary_sibling(
 }
 
 ///|
-/// Atomically replace a file after fully writing and syncing a sibling.
+fn create_temporary_file(
+  path : @path.GuestPath,
+) -> (@path.GuestPath, File) raise @root.WasiError {
+  for _ in 0..<8 {
+    let temporary = temporary_sibling(path)
+    try open(temporary, OpenOptions::write_only().create_new()) catch {
+      @root.WasiFailure(_, _, @wasi.Exist) => ()
+      error => raise error
+    } noraise {
+      file => return (temporary, file)
+    }
+  }
+  raise @root.InvalidInput(
+    @root.Operation::AtomicWrite,
+    "could not allocate a unique temporary file",
+  )
+}
+
+///|
+/// Atomically publish a file after fully writing and syncing a sibling.
 ///
-/// Atomicity is provided by WASI `path_rename` within the same preopened file
-/// system. A failed write or rename triggers best-effort temporary cleanup.
+/// Replacement uses WASI `path_rename` within the same preopened file system.
+/// Creation with `replace=false` uses a hard link for atomic no-overwrite
+/// semantics. Failures trigger best-effort temporary cleanup.
 pub fn atomic_write(
   path : @path.GuestPath,
   data : BytesView,
   replace? : Bool = true,
 ) -> Unit raise @root.WasiError {
-  if !replace && exists(path) {
+  guard !path.is_root() else {
     raise @root.InvalidInput(
       @root.Operation::AtomicWrite,
-      "destination '\{path.as_string()}' already exists",
+      "the capability root cannot be replaced by a file",
     )
   }
-  let temporary = temporary_sibling(path)
+  let (temporary, file) = create_temporary_file(path)
   try {
-    write_bytes(temporary, data, sync=Full)
-    rename(temporary, path)
+    file.write_all(data)
+    file.sync()
+    file.close()
+    if replace {
+      rename(temporary, path)
+    } else {
+      hard_link(temporary, path) catch {
+        @root.WasiFailure(_, _, @wasi.Exist) =>
+          raise @root.InvalidInput(
+            @root.Operation::AtomicWrite,
+            "destination '\{path.as_string()}' already exists",
+          )
+        error => raise error
+      }
+      remove_file(temporary) catch {
+        _ => ()
+      }
+    }
   } catch {
     error => {
+      file.close_silently()
       remove_file(temporary) catch {
         _ => ()
       }

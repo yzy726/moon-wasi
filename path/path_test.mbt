@@ -26,6 +26,28 @@ test "joins and checks containment" {
 }
 
 ///|
+test "join keeps empty suffixes local" {
+  let root = @path.GuestPath::new(".")
+  let nested = @path.GuestPath::new("workspace/cache")
+  assert_eq(root.join(""), root)
+  assert_eq(root.join("child").as_string(), "child")
+  assert_eq(nested.join(""), nested)
+  assert_eq(nested.join("."), nested)
+  assert_eq(nested.join("../config").as_string(), "workspace/config")
+}
+
+///|
+test "join rejects an absolute suffix" {
+  let base = @path.GuestPath::new("workspace")
+  try base.join("/etc/passwd") catch {
+    @path.AbsolutePath(_) => ()
+    _ => fail("expected AbsolutePath")
+  } noraise {
+    _ => fail("expected validation to fail")
+  }
+}
+
+///|
 test "rejects absolute paths" {
   try @path.GuestPath::new("/etc/passwd") catch {
     @path.AbsolutePath(_) => ()
@@ -95,4 +117,5 @@ test "containment respects component boundaries" {
   assert_true(@path.GuestPath::new("work/cache/item").is_within(base))
   assert_true(!@path.GuestPath::new("work/cache-old").is_within(base))
   assert_true(!@path.GuestPath::new("work").is_within(base))
+  assert_true(base.is_within(@path.GuestPath::new(".")))
 }

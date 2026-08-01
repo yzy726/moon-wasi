@@ -55,7 +55,7 @@ pub fn read_stdin() -> Bytes raise @root.WasiError {
     for index in 0..<size {
       output.push(chunk[index])
     }
-    if size < chunk_size {
+    if size == 0 {
       break
     }
   }

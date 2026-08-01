@@ -31,13 +31,24 @@ pub fn metadata(
 }
 
 ///|
-/// Check for a path without discarding non-`Noent` errors internally.
-pub fn exists(path : @path.GuestPath) -> Bool {
+/// Check for a path while preserving host failures other than `Noent`.
+pub fn try_exists(path : @path.GuestPath) -> Bool raise @root.WasiError {
   try {
     ignore(metadata(path))
     true
   } catch {
     @root.WasiFailure(_, _, @wasi.Noent) => false
+    error => raise error
+  }
+}
+
+///|
+/// Best-effort existence check.
+///
+/// This convenience function returns `false` for inaccessible paths as well as
+/// missing paths. Use `try_exists` when the distinction matters.
+pub fn exists(path : @path.GuestPath) -> Bool {
+  try_exists(path) catch {
     _ => false
   }
 }
@@ -70,7 +81,7 @@ pub fn write_bytes(
   data : BytesView,
   sync? : SyncMode = None,
 ) -> Unit raise @root.WasiError {
-  let options = OpenOptions::write_only().create().truncate().sync(sync)
+  let options = OpenOptions::write_only().create().truncate()
   let file = open(path, options)
   defer file.close_silently()
   file.write_all(data)
@@ -96,7 +107,7 @@ pub fn append_bytes(
   data : BytesView,
   sync? : SyncMode = None,
 ) -> Unit raise @root.WasiError {
-  let options = OpenOptions::write_only().create().append().sync(sync)
+  let options = OpenOptions::write_only().create().append()
   let file = open(path, options)
   defer file.close_silently()
   file.write_all(data)
@@ -147,7 +158,13 @@ pub fn create_dir_all(path : @path.GuestPath) -> Unit raise @root.WasiError {
         )
     }
     create_dir(current) catch {
-      @root.WasiFailure(_, _, @wasi.Exist) => ()
+      @root.WasiFailure(_, _, @wasi.Exist) =>
+        if metadata(current, follow_symlink=false).kind != Directory {
+          raise @root.InvalidInput(
+            @root.Operation::CreateDirectory,
+            "'\{current.as_string()}' exists and is not a directory",
+          )
+        }
       error => raise error
     }
   }
@@ -158,11 +175,15 @@ pub fn create_dir_all(path : @path.GuestPath) -> Unit raise @root.WasiError {
 pub fn read_dir(
   path : @path.GuestPath,
 ) -> Array[DirEntry] raise @root.WasiError {
-  let names = @base_fs.readdir(
-    path.as_string(),
-    include_hidden=true,
-    include_special=true,
-    sort=true,
+  let (base, relative) = resolve(@root.Operation::ReadDirectory, path)
+  let rights = @wasi.Rights::new() |> @wasi.Rights::set(@wasi.Right::Fd_readdir)
+  let directory = base.path_open(
+    @wasi.LookupFlags::new(),
+    relative,
+    @wasi.OpenFlags::new() |> @wasi.OpenFlags::set(@wasi.OpenFlag::Directory),
+    rights,
+    @wasi.Rights::new(),
+    @wasi.FdFlags::new(),
   ) catch {
     errno =>
       raise @root.wasi_error(
@@ -171,20 +192,46 @@ pub fn read_dir(
         path=path.as_string(),
       )
   }
+  defer (directory.fd_close() catch { _ => () })
   let entries : Array[DirEntry] = []
-  for name in names {
-    let child = path.join(name) catch {
-      _ =>
-        raise @root.InvalidInput(
+  let mut cookie = @wasi.DirCookie(0UL)
+  while true {
+    let (batch, has_more) = directory.fd_readdir(cookie~) catch {
+      errno =>
+        raise @root.wasi_error(
           @root.Operation::ReadDirectory,
-          "host returned an invalid directory entry",
+          errno,
+          path=path.as_string(),
         )
     }
-    entries.push({
-      name,
-      path: child,
-      kind: metadata(child, follow_symlink=false).kind,
-    })
+    for item in batch {
+      let (name, dir_entry) = item
+      cookie = dir_entry.d_next
+      if name == "." || name == ".." {
+        continue
+      }
+      let child = path.join(name) catch {
+        _ =>
+          raise @root.InvalidInput(
+            @root.Operation::ReadDirectory,
+            "host returned an invalid directory entry",
+          )
+      }
+      entries.push({
+        name,
+        path: child,
+        kind: metadata(child, follow_symlink=false).kind,
+      })
+    }
+    if !has_more {
+      break
+    }
+    guard !batch.is_empty() else {
+      raise @root.InvalidInput(
+        @root.Operation::ReadDirectory,
+        "directory entry exceeds the host read buffer",
+      )
+    }
   }
   entries.sort_by((left, right) => left.name.lexical_compare(right.name))
   entries
@@ -294,12 +341,49 @@ pub fn hard_link(
 
 ///|
 /// Create a relative symbolic link.
+///
+/// The target is interpreted from the link's parent directory, matching WASI
+/// and POSIX semantics. Targets which would lexically escape the capability
+/// root are rejected before calling the host.
 pub fn symbolic_link(
-  target : @path.GuestPath,
+  target : StringView,
   link_path : @path.GuestPath,
 ) -> Unit raise @root.WasiError {
+  let target = target.to_owned()
+  guard !link_path.is_root() else {
+    raise @root.InvalidInput(
+      @root.Operation::Link,
+      "the capability root cannot be replaced by a symbolic link",
+    )
+  }
+  guard !target.is_empty() else {
+    raise @root.InvalidInput(
+      @root.Operation::Link,
+      "symbolic-link target must not be empty",
+    )
+  }
+  guard !target.has_prefix("/") else {
+    raise @root.InvalidInput(
+      @root.Operation::Link,
+      "symbolic-link target must be relative",
+    )
+  }
+  guard !target.contains("\\") && !target.contains("\u{0000}") else {
+    raise @root.InvalidInput(
+      @root.Operation::Link,
+      "symbolic-link target is not a valid guest path",
+    )
+  }
+  let parent = link_path.parent().unwrap_or(link_path)
+  ignore(parent.join(target)) catch {
+    _ =>
+      raise @root.InvalidInput(
+        @root.Operation::Link,
+        "symbolic-link target escapes the capability root",
+      )
+  }
   let (base, relative) = resolve(@root.Operation::Link, link_path)
-  @wasi.path_symlink(target.as_string(), base, relative) catch {
+  @wasi.path_symlink(target, base, relative) catch {
     errno =>
       raise @root.wasi_error(
         @root.Operation::Link,
@@ -354,19 +438,46 @@ pub fn copy_file(
   overwrite? : Bool = false,
   sync? : SyncMode = None,
 ) -> UInt64 raise @root.WasiError {
-  if !overwrite && exists(destination) {
+  if source == destination {
     raise @root.InvalidInput(
       @root.Operation::Copy,
-      "destination '\{destination.as_string()}' already exists",
+      "source and destination must be different paths",
     )
   }
   let input = open(source, OpenOptions::read_only())
   defer input.close_silently()
-  let output = open(
-    destination,
-    OpenOptions::write_only().create().truncate().sync(sync),
-  )
+  let input_metadata = input.metadata()
+  guard input_metadata.kind == Regular else {
+    raise @root.InvalidInput(
+      @root.Operation::Copy,
+      "source '\{source.as_string()}' is not a regular file",
+    )
+  }
+  let output_options = if overwrite {
+    OpenOptions::write_only().create()
+  } else {
+    OpenOptions::write_only().create_new()
+  }
+  let output = open(destination, output_options)
   defer output.close_silently()
+  if overwrite {
+    let output_metadata = output.metadata()
+    guard input_metadata.device != output_metadata.device ||
+      input_metadata.inode != output_metadata.inode else {
+      raise @root.InvalidInput(
+        @root.Operation::Copy,
+        "source and destination refer to the same file",
+      )
+    }
+    output.fd.fd_filestat_set_size(@wasi.FileSize(0UL)) catch {
+      errno =>
+        raise @root.wasi_error(
+          @root.Operation::Copy,
+          errno,
+          path=destination.as_string(),
+        )
+    }
+  }
   let chunk_size = 64 * 1024
   let mut total = 0UL
   while true {

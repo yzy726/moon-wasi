@@ -60,6 +60,7 @@ pub fn wait_descriptor(
   let events = @wasi.poll_oneoff(subscriptions) catch {
     errno => raise @root.wasi_error(@root.Operation::Poll, errno)
   }
+  let mut timed_out = false
   for event in events {
     guard event.error == @wasi.Success else {
       raise @root.wasi_error(
@@ -69,12 +70,16 @@ pub fn wait_descriptor(
       )
     }
     if event.type_ == @wasi.EventType::Clock {
-      return TimedOut
+      timed_out = true
+      continue
     }
     let hangup = event.fd_readwrite.flags.is_set(
       @wasi.EventRWFlag::Fd_readwrite_hangup,
     )
     return Ready(event.fd_readwrite.nbytes.0, hangup)
+  }
+  if timed_out {
+    return TimedOut
   }
   raise @root.InvalidInput(@root.Operation::Poll, "host returned no events")
 }

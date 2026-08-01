@@ -22,7 +22,7 @@
 
 - `GuestPath`：规范化 `/` 分隔的 guest 相对路径，拒绝绝对路径、NUL、反斜杠和越界
   的 `..`；
-- 文件 API：完整读写、追加、seek/tell、metadata、显式数据或完整同步；
+- 文件 API：完整读写、追加、seek/tell、含 device/inode 的 metadata、显式同步；
 - 目录 API：递归创建/删除、稳定排序的读取与深度优先遍历、文件和目录树复制；
 - 链接与移动：rename、硬链接、符号链接及 readlink；
 - 原子替换：同目录临时文件、完整同步、rename 和失败清理；
@@ -52,6 +52,7 @@ import {
   "Ag108/moon-wasi/fs" @wasi_fs,
   "Ag108/moon-wasi/path",
   "Ag108/moon-wasi/sys" @wasi_sys,
+  "moonbitlang/core/debug",
 }
 
 pkgtype(kind: "executable")
@@ -75,7 +76,7 @@ fn main {
     @wasi_sys.print(@wasi_fs.read_text(path))
   } catch {
     error => {
-      @wasi_sys.eprint("failed: \{error.message()}\n") catch {
+      @wasi_sys.eprint("failed: \{@debug.to_string(error)}\n") catch {
         _ => ()
       }
       @wasi_sys.exit(1)
@@ -130,6 +131,8 @@ wasmtime run --dir .::. \
 
 `fs.open` 返回拥有描述符的 `File`，调用者必须恰好调用一次 `close()`。`read_text`、
 `write_text`、`copy_file` 等高层函数会在成功和失败路径中自动关闭它们拥有的描述符。
+`exists` 是把所有不可访问状态折叠为 `false` 的便利接口；需要区分“不存在”和宿主
+错误时应使用 `try_exists`。
 
 ## 测试
 
@@ -159,6 +162,8 @@ MoonBit 自带的 wasm 单元测试宿主目前没有实例化全部路径类 WA
 - 不提供网络、异步运行时、Preview 2/3 component model 或宿主路径访问；
 - `atomic_write` 保证同一预开放文件系统内的临时文件同步后 rename，但 Preview 1
   没有可移植的父目录同步接口；掉电一致性仍受宿主文件系统影响；
+- `atomic_write(..., replace=false)` 使用硬链接提供无覆盖发布语义，要求宿主授予 link
+  capability；
 - 复制目录树不会隐式跟随符号链接，避免越过调用者预期的目录边界；
 - Windows 宿主创建符号链接可能需要开发者模式或额外权限。
 

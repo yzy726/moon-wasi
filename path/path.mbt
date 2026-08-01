@@ -66,7 +66,11 @@ pub fn GuestPath::join(
   self : GuestPath,
   suffix : StringView,
 ) -> GuestPath raise PathError {
-  if self.is_root() {
+  let suffix = suffix.to_owned()
+  guard !suffix.has_prefix("/") else { raise AbsolutePath(suffix) }
+  if suffix.is_empty() || suffix == "." {
+    self
+  } else if self.is_root() {
     GuestPath::new(suffix)
   } else {
     GuestPath::new("\{self.value}/\{suffix}")

@@ -16,6 +16,8 @@ pub(all) enum FileKind {
 ///
 /// Times are nanoseconds since the WASI clock epoch.
 pub(all) struct Metadata {
+  device : UInt64
+  inode : UInt64
   kind : FileKind
   size : UInt64
   accessed_ns : UInt64
@@ -49,7 +51,6 @@ pub struct OpenOptions {
   create : Bool
   create_new : Bool
   truncate : Bool
-  sync : SyncMode
 } derive(Eq, Debug)
 
 ///|
@@ -62,7 +63,6 @@ pub fn OpenOptions::read_only() -> OpenOptions {
     create: false,
     create_new: false,
     truncate: false,
-    sync: None,
   }
 }
 
@@ -76,7 +76,6 @@ pub fn OpenOptions::write_only() -> OpenOptions {
     create: false,
     create_new: false,
     truncate: false,
-    sync: None,
   }
 }
 
@@ -110,7 +109,7 @@ pub fn OpenOptions::create_new(
   self : OpenOptions,
   enabled? : Bool = true,
 ) -> OpenOptions {
-  { ..self, create_new: enabled, create: enabled }
+  { ..self, create_new: enabled, create: self.create || enabled }
 }
 
 ///|
@@ -120,12 +119,6 @@ pub fn OpenOptions::truncate(
   enabled? : Bool = true,
 ) -> OpenOptions {
   { ..self, truncate: enabled }
-}
-
-///|
-/// Select write durability.
-pub fn OpenOptions::sync(self : OpenOptions, mode : SyncMode) -> OpenOptions {
-  { ..self, sync: mode }
 }
 
 ///|
@@ -172,6 +165,8 @@ fn file_kind(kind : @wasi.FileType) -> FileKind {
 ///|
 fn metadata_from_wasi(stat : @wasi.FileStat) -> Metadata {
   {
+    device: stat.dev.0,
+    inode: stat.ino.0,
     kind: file_kind(stat.filetype),
     size: stat.size.0,
     accessed_ns: stat.atim.0,

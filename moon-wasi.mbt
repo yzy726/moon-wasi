@@ -1,3 +1,2 @@
-// Main package file for your library code.
-// Put public APIs and shared helpers here.
-// Keep blocks small and focused for easy refactors.
+// Package `Ag108/moon-wasi` contains the shared error model used by the
+// capability-aware `path`, `fs`, and `sys` packages.

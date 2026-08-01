@@ -28,3 +28,7 @@ description = "Capability-aware WASI Preview 1 utilities for MoonBit"
 import {
   "peter-jerry-ye/wasi@0.25.0",
 }
+
+options(
+  exclude: [ "AGENTS.md" ],
+)

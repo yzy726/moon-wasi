@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+MOON_WASI_WASMTIME="${MOON_WASI_WASMTIME:-wasmtime}"
+
 moon info
 moon fmt
 moon check --deny-warn
@@ -11,6 +13,7 @@ moon build --target wasm --release cmd/main
 moon build --target wasm --release examples/tree
 moon build --target wasm --release examples/atomic-config
 
-wasmtime run --dir .::. _build/wasm/release/build/integration/fs/fs.wasm
-wasmtime run --dir .::. --env MOON_WASI_TEST=ready \
+"$MOON_WASI_WASMTIME" run --dir .::. \
+  _build/wasm/release/build/integration/fs/fs.wasm
+"$MOON_WASI_WASMTIME" run --dir .::. --env MOON_WASI_TEST=ready \
   _build/wasm/release/build/integration/sys/sys.wasm

@@ -115,7 +115,7 @@ pub fn File::read_all(self : File) -> Bytes raise @root.WasiError {
     for index in 0..<count {
       output.push(chunk[index])
     }
-    if count < chunk_size {
+    if count == 0 {
       break
     }
   }

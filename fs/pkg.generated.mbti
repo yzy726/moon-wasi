@@ -47,7 +47,9 @@ pub fn remove_tree(@path.GuestPath) -> Unit raise @moon-wasi.WasiError
 
 pub fn rename(@path.GuestPath, @path.GuestPath) -> Unit raise @moon-wasi.WasiError
 
-pub fn symbolic_link(@path.GuestPath, @path.GuestPath) -> Unit raise @moon-wasi.WasiError
+pub fn symbolic_link(StringView, @path.GuestPath) -> Unit raise @moon-wasi.WasiError
+
+pub fn try_exists(@path.GuestPath) -> Bool raise @moon-wasi.WasiError
 
 pub fn walk(@path.GuestPath, max_depth? : Int) -> Array[WalkEntry] raise @moon-wasi.WasiError
 
@@ -89,6 +91,8 @@ pub(all) enum FileKind {
 } derive(Eq, @debug.Debug)
 
 pub(all) struct Metadata {
+  device : UInt64
+  inode : UInt64
   kind : FileKind
   size : UInt64
   accessed_ns : UInt64
@@ -104,14 +108,12 @@ pub struct OpenOptions {
   create : Bool
   create_new : Bool
   truncate : Bool
-  sync : SyncMode
 } derive(Eq, @debug.Debug)
 pub fn OpenOptions::append(Self, enabled? : Bool) -> Self
 pub fn OpenOptions::create(Self, enabled? : Bool) -> Self
 pub fn OpenOptions::create_new(Self, enabled? : Bool) -> Self
 pub fn OpenOptions::read_only() -> Self
 pub fn OpenOptions::read_write() -> Self
-pub fn OpenOptions::sync(Self, SyncMode) -> Self
 pub fn OpenOptions::truncate(Self, enabled? : Bool) -> Self
 pub fn OpenOptions::write_only() -> Self
 

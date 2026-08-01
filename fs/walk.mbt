@@ -34,6 +34,12 @@ pub fn walk(
   root : @path.GuestPath,
   max_depth? : Int = -1,
 ) -> Array[WalkEntry] raise @root.WasiError {
+  guard max_depth >= -1 else {
+    raise @root.InvalidInput(
+      @root.Operation::ReadDirectory,
+      "max_depth must be -1 or non-negative",
+    )
+  }
   guard metadata(root, follow_symlink=false).kind == Directory else {
     raise @root.InvalidInput(
       @root.Operation::ReadDirectory,
@@ -61,7 +67,13 @@ pub fn copy_tree(
       "source '\{source.as_string()}' is not a directory",
     )
   }
-  if exists(destination) {
+  guard !destination.is_within(source) else {
+    raise @root.InvalidInput(
+      @root.Operation::Copy,
+      "destination must not equal or be nested below the source",
+    )
+  }
+  if try_exists(destination) {
     guard overwrite else {
       raise @root.InvalidInput(
         @root.Operation::Copy,

@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  wasi:
+    name: MoonBit and Wasmtime
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v5
+
+      - name: Install MoonBit
+        shell: bash
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+
+      - name: Install Wasmtime
+        shell: bash
+        run: |
+          curl -fsSL https://wasmtime.dev/install.sh | bash
+          echo "$HOME/.wasmtime/bin" >> "$GITHUB_PATH"
+
+      - name: Show tool versions
+        run: |
+          moon version --all
+          wasmtime --version
+
+      - name: Run full WASI validation
+        run: bash scripts/test-wasi.sh
+
+      - name: Verify generated files and formatting are committed
+        run: git diff --exit-code
+
+      - name: Validate release package
+        run: moon package --frozen --list

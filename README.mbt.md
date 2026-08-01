@@ -4,7 +4,7 @@
 可靠文件系统操作、原子写入和常用系统能力。
 
 `Ag108/moon-wasi` 建立在 `peter-jerry-ye/wasi` 的底层 ABI 绑定之上，目标后端为
-MoonBit `wasm`，当前版本为 `0.1.0`。
+MoonBit `wasm`，当前版本为 `0.1.0`。本项目是原创增强库，不是其他语言项目的移植。
 
 ## 特性
 
@@ -58,7 +58,7 @@ moon install
 moon check --deny-warn
 ```
 
-`0.1.0` 发布到 mooncakes.io 后，可以在其他项目中添加依赖：
+从 mooncakes.io 安装：
 
 ```bash
 moon add Ag108/moon-wasi
@@ -283,6 +283,7 @@ MoonBit wasm 单元测试宿主没有实例化全部路径类 WASI import，因�
 - [兼容性说明](docs/compatibility.md)
 - [变更记录](CHANGELOG.md)
 - [第三方声明](THIRD_PARTY_NOTICES.md)
+- [AI 辅助开发说明](AI_USAGE.md)
 
 ## 许可证
 

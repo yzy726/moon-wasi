@@ -1,11 +1,45 @@
 // Generated using `moon info`, DON'T EDIT IT
 package "Ag108/moon-wasi"
 
+import {
+  "moonbitlang/core/debug",
+  "peter-jerry-ye/wasi",
+}
+
 // Values
+pub fn wasi_error(Operation, @wasi.Errno, path? : String) -> WasiError
 
 // Errors
+pub(all) suberror WasiError {
+  WasiFailure(Operation, String?, @wasi.Errno)
+  InvalidInput(Operation, String)
+} derive(Eq, @debug.Debug)
+pub fn WasiError::errno(Self) -> @wasi.Errno?
+pub fn WasiError::message(Self) -> String
+pub fn WasiError::operation(Self) -> Operation
+pub fn WasiError::path(Self) -> String?
 
 // Types and methods
+pub(all) enum Operation {
+  Arguments
+  Environment
+  Clock
+  Random
+  Poll
+  Open
+  Close
+  Read
+  Write
+  Seek
+  Sync
+  Metadata
+  ReadDirectory
+  CreateDirectory
+  Remove
+  Rename
+  Link
+} derive(Eq, @debug.Debug)
+pub fn Operation::name(Self) -> String
 
 // Type aliases
 

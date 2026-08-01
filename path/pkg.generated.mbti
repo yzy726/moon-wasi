@@ -1,0 +1,35 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Ag108/moon-wasi/path"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+
+// Errors
+pub(all) suberror PathError {
+  EmptyPath
+  AbsolutePath(String)
+  ParentTraversal(String)
+  Backslash(String)
+  NulByte(String)
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+pub struct GuestPath {
+  value : String
+} derive(Eq, @debug.Debug)
+pub fn GuestPath::as_string(Self) -> String
+pub fn GuestPath::file_name(Self) -> String?
+pub fn GuestPath::is_root(Self) -> Bool
+pub fn GuestPath::is_within(Self, Self) -> Bool
+pub fn GuestPath::join(Self, StringView) -> Self raise PathError
+pub fn GuestPath::new(StringView) -> Self raise PathError
+pub fn GuestPath::parent(Self) -> Self?
+pub fn GuestPath::segments(Self) -> Array[String]
+
+// Type aliases
+
+// Traits
+

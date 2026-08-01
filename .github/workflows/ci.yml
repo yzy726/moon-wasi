@@ -34,6 +34,9 @@ jobs:
           moon version --all
           wasmtime --version
 
+      - name: Update Mooncakes registry
+        run: moon update
+
       - name: Run strict checks
         run: moon check --deny-warn
 
